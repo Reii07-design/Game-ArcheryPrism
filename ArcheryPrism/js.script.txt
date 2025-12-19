@@ -1,0 +1,347 @@
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let animationId, gameTimer, spawnTimer;
+let gameRunning = false, gamePaused = false, audioEnabled = true;
+let score = 0, coinsEarned = 0, timeLeft = 60, arrowsLeft = 30;
+let highscore = localStorage.getItem('archeryPrismHighscore') || 0;
+let mouseX = 0, mouseY = 0;
+let bowX = 100, bowY = 0;
+
+let targets = [], gameArrows = [], particles = [], floatingTexts = [];
+
+// Data Pemain & Inventaris
+let playerData = {
+coins: parseInt(localStorage.getItem('archeryPrismCoins')) || 0,
+ownedBows: JSON.parse(localStorage.getItem('archeryPrismOwnedBows')) || ['standard'],
+ownedArrows: JSON.parse(localStorage.getItem('archeryPrismOwnedArrows')) || ['wooden'],
+equippedBow: localStorage.getItem('archeryPrismEquippedBow') || 'standard',
+equippedArrow: localStorage.getItem('archeryPrismEquippedArrow') || 'wooden'
+};
+
+const bows = [
+{ id: 'standard', name: 'Busur Kayu', price: 0, color: '#8b4513', description: 'Busur latihan standar.' },
+{ id: 'phoenix', name: 'Phoenix Bow', price: 500, color: '#e67e22', auraColor: '#ff4500', description: 'Memiliki aura api membara.' },
+{ id: 'frost', name: 'Frost Bow', price: 1000, color: '#3498db', auraColor: '#a2d9ff', description: 'Sedingin es, secepat kilat.' }
+];
+
+const arrowItems = [
+{ id: 'wooden', name: 'Panah Kayu', price: 0, color: '#d2b48c', soundFreq: 400, description: 'Ringan dan simpel.' },
+{ id: 'plasma', name: 'Panah Plasma', price: 300, color: '#3498db', soundFreq: 800, description: 'Energi murni bercahaya.' },
+{ id: 'emerald', name: 'Emerald Arrow', price: 800, color: '#2ecc71', soundFreq: 600, description: 'Panah kristal yang elegan.' }
+];
+
+// --- LOGIKA UTAMA ---
+
+function resizeCanvas() {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+bowY = canvas.height / 2;
+}
+
+// Audio sederhana menggunakan Web Audio API
+let audioCtx;
+function initAudio() {
+if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playSound(freq, duration) {
+if (!audioEnabled || !audioCtx) return;
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+gain.gain.setValueAtTime(duration, audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start();
+osc.stop(audioCtx.currentTime + 0.2);
+}
+
+// --- CLASSES ---
+
+class Target {
+constructor() {
+this.sizeType = Math.random() < 0.2 ? 'small' : (Math.random() < 0.5 ? 'medium' : 'large');
+if (this.sizeType === 'small') { this.radius = 15; this.points = 50; this.speed = 5; this.color = '#3498db'; }
+else if (this.sizeType === 'medium') { this.radius = 25; this.points = 20; this.speed = 3; this.color = '#f1c40f'; }
+else { this.radius = 40; this.points = 10; this.speed = 2; this.color = '#e74c3c'; }
+this.x = canvas.width + this.radius;
+this.y = Math.random() * (canvas.height - 150) + 75;
+this.vx = -this.speed;
+}
+update() { this.x += this.vx; }
+draw() {
+ctx.save();
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+ctx.fillStyle = 'white'; ctx.fill();
+ctx.strokeStyle = this.color; ctx.lineWidth = this.radius * 0.2; ctx.stroke();
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.radius * 0.4, 0, Math.PI * 2);
+ctx.fillStyle = this.color; ctx.fill();
+ctx.restore();
+}
+isOffScreen() { return this.x < -this.radius; }
+}
+
+class Particle {
+constructor(x, y, color) {
+this.x = x; this.y = y; this.color = color;
+this.vx = (Math.random() - 0.5) * 8;
+this.vy = (Math.random() - 0.5) * 8;
+this.alpha = 1;
+}
+update() { this.x += this.vx; this.y += this.vy; this.alpha -= 0.05; }
+draw() {
+ctx.save();
+ctx.globalAlpha = this.alpha;
+ctx.fillStyle = this.color;
+ctx.fillRect(this.x, this.y, 4, 4);
+ctx.restore();
+}
+isFinished() { return this.alpha <= 0; }
+}
+
+class Arrow {
+constructor(x, y, targetX, targetY) {
+this.x = x; this.y = y;
+this.angle = Math.atan2(targetY - y, targetX - x);
+this.speed = 18;
+this.active = true;
+this.trail = [];
+const arrowData = arrowItems.find(a => a.id === playerData.equippedArrow);
+this.color = arrowData.color;
+this.trailColor = arrowData.color + '88';
+}
+update() {
+this.trail.push({x: this.x, y: this.y});
+if (this.trail.length > 8) this.trail.shift();
+this.x += Math.cos(this.angle) * this.speed;
+this.y += Math.sin(this.angle) * this.speed;
+if (this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.active = false;
+}
+draw() {
+ctx.strokeStyle = this.trailColor;
+ctx.lineWidth = 3;
+ctx.beginPath();
+this.trail.forEach((p, i) => { if(i===0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+ctx.stroke();
+ctx.save();
+ctx.translate(this.x, this.y);
+ctx.rotate(this.angle);
+ctx.fillStyle = this.color;
+ctx.fillRect(-25, -2, 25, 4);
+ctx.restore();
+}
+}
+
+class FloatingText {
+constructor(x, y, text, color) {
+this.x = x; this.y = y; this.text = text; this.color = color;
+this.alpha = 1; this.vy = -2;
+}
+update() { this.y += this.vy; this.alpha -= 0.02; }
+draw() {
+ctx.save();
+ctx.globalAlpha = this.alpha;
+ctx.font = 'bold 20px Arial';
+ctx.fillStyle = this.color;
+ctx.fillText(this.text, this.x, this.y);
+ctx.restore();
+}
+isFinished() { return this.alpha <= 0; }
+}
+
+// --- FUNGSI GAME ---
+
+function startGame() {
+gameRunning = true; gamePaused = false; score = 0; coinsEarned = 0; timeLeft = 60; arrowsLeft = 30;
+targets = []; gameArrows = []; particles = []; floatingTexts = [];
+document.getElementById('gameOverOverlay').style.display = 'none';
+updateDisplay(); resizeCanvas(); gameLoop();
+if (gameTimer) clearInterval(gameTimer);
+gameTimer = setInterval(() => {
+if (gameRunning && !gamePaused) {
+timeLeft--; updateDisplay();
+if (timeLeft <= 0) endGame();
+}
+}, 1000);
+if (spawnTimer) clearInterval(spawnTimer);
+spawnTimer = setInterval(() => {
+if (gameRunning && !gamePaused && targets.length < 5) targets.push(new Target());
+}, 1500);
+}
+
+function endGame() {
+gameRunning = false; clearInterval(gameTimer); clearInterval(spawnTimer);
+playerData.coins += coinsEarned;
+if (score > highscore) { highscore = score; localStorage.setItem('archeryPrismHighscore', highscore); }
+savePlayerData();
+document.getElementById('finalScore').textContent = score;
+document.getElementById('coinsEarned').textContent = coinsEarned;
+document.getElementById('gameOverOverlay').style.display = 'flex';
+}
+
+function shootArrow() {
+if (!gameRunning || gamePaused || arrowsLeft <= 0) return;
+initAudio();
+gameArrows.push(new Arrow(bowX, bowY, mouseX, mouseY));
+arrowsLeft--;
+const arrowData = arrowItems.find(a => a.id === playerData.equippedArrow);
+playSound(arrowData.soundFreq, 0.1);
+updateDisplay();
+}
+
+function gameLoop() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Gambar Bow
+const angle = Math.atan2(mouseY - bowY, mouseX - bowX);
+const bowData = bows.find(b => b.id === playerData.equippedBow);
+ctx.save();
+ctx.translate(bowX, bowY);
+ctx.rotate(angle);
+if (bowData.auraColor) {
+ctx.shadowBlur = 15; ctx.shadowColor = bowData.auraColor;
+ctx.fillStyle = bowData.auraColor + '44';
+ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill();
+}
+ctx.strokeStyle = bowData.color; ctx.lineWidth = 5;
+ctx.beginPath(); ctx.arc(0, 0, 25, -Math.PI/2, Math.PI/2); ctx.stroke();
+ctx.restore();
+
+if (!gamePaused) {
+particles.forEach((p, i) => { p.update(); p.draw(); if(p.isFinished()) particles.splice(i, 1); });
+targets.forEach((t, i) => { t.update(); t.draw(); if(t.isOffScreen()) targets.splice(i, 1); });
+gameArrows.forEach((a, i) => { a.update(); a.draw(); if(!a.active) gameArrows.splice(i, 1); });
+floatingTexts.forEach((f, i) => { f.update(); f.draw(); if(f.isFinished()) floatingTexts.splice(i, 1); });
+
+// Cek Tabrakan
+gameArrows.forEach(arrow => {
+if (!arrow.active) return;
+targets.forEach((target, index) => {
+const dx = arrow.x - target.x, dy = arrow.y - target.y;
+if (Math.sqrt(dx*dx + dy*dy) < target.radius) {
+arrow.active = false;
+score += target.points;
+coinsEarned++;
+for(let i=0; i<15; i++) particles.push(new Particle(target.x, target.y, target.color));
+floatingTexts.push(new FloatingText(target.x, target.y, `+${target.points}`, target.color));
+targets.splice(index, 1);
+updateDisplay();
+playSound(1000, 0.1);
+}
+});
+});
+}
+
+if (gameRunning) animationId = requestAnimationFrame(gameLoop);
+}
+
+// --- UI & TOKO ---
+
+function togglePause() {
+gamePaused = !gamePaused;
+document.getElementById('pauseButton').textContent = gamePaused ? 'Resume' : 'Pause';
+}
+
+function toggleAudio() {
+audioEnabled = !audioEnabled;
+document.getElementById('audioButton').textContent = audioEnabled ? 'Audio: ON' : 'Audio: OFF';
+}
+
+function updateDisplay() {
+document.getElementById('scoreDisplay').textContent = score;
+document.getElementById('coinsValue').textContent = playerData.coins;
+document.getElementById('timeDisplay').textContent = timeLeft;
+document.getElementById('arrowsDisplay').textContent = arrowsLeft;
+document.getElementById('highscoreDisplay').textContent = highscore;
+}
+
+function openShop() {
+gamePaused = true;
+document.getElementById('shopScreen').classList.add('active');
+document.getElementById('shopCoinsDisplay').textContent = playerData.coins;
+renderShop();
+}
+
+function closeShop() {
+document.getElementById('shopScreen').classList.remove('active');
+if (gameRunning) gamePaused = false;
+}
+
+function renderShop() {
+const bGrid = document.getElementById('bowsGrid');
+const aGrid = document.getElementById('arrowsGrid');
+bGrid.innerHTML = ''; aGrid.innerHTML = '';
+
+bows.forEach(item => {
+const isOwned = playerData.ownedBows.includes(item.id);
+const isEquipped = playerData.equippedBow === item.id;
+bGrid.innerHTML += `
+<div class="shop-item ${isEquipped ? 'equipped' : ''}">
+<div class="item-preview" style="color:${item.color}">🏹</div>
+<div class="item-name">${item.name}</div>
+<div class="item-price">${isOwned ? 'MILIK ANDA' : item.price + ' 🪙'}</div>
+<button class="item-button" onclick="${isOwned ? `equipItem('bow', '${item.id}')` : `buyItem('bow', '${item.id}', ${item.price})`}">
+${isEquipped ? '✓ Terpasang' : (isOwned ? 'Pasang' : 'Beli')}
+</button>
+</div>`;
+});
+
+arrowItems.forEach(item => {
+const isOwned = playerData.ownedArrows.includes(item.id);
+const isEquipped = playerData.equippedArrow === item.id;
+aGrid.innerHTML += `
+<div class="shop-item ${isEquipped ? 'equipped' : ''}">
+<div class="item-preview" style="color:${item.color}">➳</div>
+<div class="item-name">${item.name}</div>
+<div class="item-price">${isOwned ? 'MILIK ANDA' : item.price + ' 🪙'}</div>
+<button class="item-button" onclick="${isOwned ? `equipItem('arrow', '${item.id}')` : `buyItem('arrow', '${item.id}', ${item.price})`}">
+${isEquipped ? '✓ Terpasang' : (isOwned ? 'Pasang' : 'Beli')}
+</button>
+</div>`;
+});
+}
+
+function buyItem(type, id, price) {
+if (playerData.coins >= price) {
+playerData.coins -= price;
+if (type === 'bow') { playerData.ownedBows.push(id); playerData.equippedBow = id; }
+else { playerData.ownedArrows.push(id); playerData.equippedArrow = id; }
+savePlayerData(); updateDisplay(); renderShop();
+document.getElementById('shopCoinsDisplay').textContent = playerData.coins;
+} else { alert("Koin tidak cukup!"); }
+}
+
+function equipItem(type, id) {
+if (type === 'bow') playerData.equippedBow = id;
+else playerData.equippedArrow = id;
+savePlayerData(); renderShop();
+}
+
+function savePlayerData() {
+localStorage.setItem('archeryPrismCoins', playerData.coins);
+localStorage.setItem('archeryPrismOwnedBows', JSON.stringify(playerData.ownedBows));
+localStorage.setItem('archeryPrismOwnedArrows', JSON.stringify(playerData.ownedArrows));
+localStorage.setItem('archeryPrismEquippedBow', playerData.equippedBow);
+localStorage.setItem('archeryPrismEquippedArrow', playerData.equippedArrow);
+}
+
+// --- EVENT LISTENERS ---
+
+window.addEventListener('resize', resizeCanvas);
+canvas.addEventListener('mousemove', (e) => {
+const rect = canvas.getBoundingClientRect();
+mouseX = e.clientX - rect.left;
+mouseY = e.clientY - rect.top;
+});
+canvas.addEventListener('mousedown', shootArrow);
+window.addEventListener('keydown', (e) => {
+if (e.code === 'Space') shootArrow();
+if (e.code === 'Escape') togglePause();
+});
+
+// Jalankan Inisialisasi
+resizeCanvas();
+updateDisplay();

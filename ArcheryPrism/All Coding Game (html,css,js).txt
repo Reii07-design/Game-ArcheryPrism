@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcheryPrism</title>
+<script src="/_sdk/element_sdk.js"></script>
+<style>
+body {
+box-sizing: border-box;
+}
+
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+html, body {
+height: 100%;
+width: 100%;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+overflow: hidden;
+}
+
+.game-wrapper {
+width: 100%;
+height: 100%;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 20px;
+}
+
+.game-container {
+width: 100%;
+height: 100%;
+max-width: 1600px;
+max-height: 900px;
+background: #ffffff;
+border-radius: 20px;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+display: flex;
+overflow: hidden;
+position: relative;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+/* Shop Screen */
+.shop-screen {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+display: none;
+z-index: 100;
+overflow-y: auto;
+animation: fadeIn 0.3s ease;
+}
+
+.shop-screen.active {
+display: block;
+}
+
+.shop-container {
+padding: 30px;
+max-width: 1400px;
+margin: 0 auto;
+}
+
+.shop-header {
+text-align: center;
+margin-bottom: 40px;
+}
+
+.shop-title {
+font-size: 48px;
+font-weight: bold;
+color: #ffd700;
+margin-bottom: 10px;
+}
+
+.coins-display {
+font-size: 32px;
+color: #fff;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 10px;
+}
+
+.coin-icon {
+width: 40px;
+height: 40px;
+background: radial-gradient(circle, #ffd700, #ffed4e);
+border-radius: 50%;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+font-weight: bold;
+box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+}
+
+.shop-section {
+margin-bottom: 50px;
+}
+
+.section-title {
+font-size: 36px;
+color: #ffd700;
+margin-bottom: 25px;
+text-align: center;
+}
+
+.items-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+gap: 25px;
+margin-bottom: 30px;
+}
+
+.shop-item {
+background: rgba(255, 255, 255, 0.1);
+backdrop-filter: blur(10px);
+border-radius: 20px;
+padding: 25px;
+border: 2px solid rgba(255, 255, 255, 0.2);
+transition: all 0.3s ease;
+cursor: pointer;
+text-align: center;
+}
+
+.shop-item:hover {
+transform: translateY(-5px);
+border-color: #ffd700;
+box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+}
+
+.shop-item.owned {
+border-color: #27ae60;
+background: rgba(39, 174, 96, 0.1);
+}
+
+.shop-item.equipped {
+border-color: #3498db;
+background: rgba(52, 152, 219, 0.2);
+box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+}
+
+.item-preview {
+width: 100%;
+height: 120px;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-bottom: 15px;
+font-size: 60px;
+}
+
+.item-name {
+font-size: 22px;
+font-weight: bold;
+color: #fff;
+margin-bottom: 10px;
+}
+
+.item-description {
+font-size: 14px;
+color: #bdc3c7;
+margin-bottom: 15px;
+min-height: 40px;
+}
+
+.item-price {
+font-size: 24px;
+font-weight: bold;
+color: #ffd700;
+margin-bottom: 15px;
+}
+
+.item-button {
+padding: 10px 25px;
+border: none;
+border-radius: 10px;
+font-size: 16px;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.3s ease;
+width: 100%;
+}
+
+.item-button.buy {
+background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+color: white;
+}
+
+.item-button.equip {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+}
+
+.item-button.equipped {
+background: #27ae60;
+color: white;
+cursor: default;
+}
+
+.item-button:hover:not(.equipped) {
+transform: scale(1.05);
+}
+
+.close-shop-btn {
+position: fixed;
+top: 20px;
+right: 20px;
+padding: 15px 30px;
+background: #e74c3c;
+color: white;
+border: none;
+border-radius: 10px;
+font-size: 18px;
+font-weight: bold;
+cursor: pointer;
+z-index: 101;
+}
+
+.close-shop-btn:hover {
+background: #c0392b;
+}
+
+/* Game Area */
+.canvas-container {
+flex: 1;
+position: relative;
+background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+display: flex;
+align-items: center;
+justify-content: center;
+min-width: 0;
+overflow: hidden;
+}
+
+#gameCanvas {
+display: block;
+cursor: crosshair;
+width: 100%;
+height: 100%;
+}
+
+.sidebar {
+width: 320px;
+background: linear-gradient(to bottom, #2c3e50 0%, #34495e 100%);
+padding: 25px;
+display: flex;
+flex-direction: column;
+gap: 15px;
+color: #ffffff;
+overflow-y: auto;
+}
+
+.game-title {
+font-size: 32px;
+font-weight: bold;
+text-align: center;
+background: linear-gradient(45deg, #ffd700, #ffed4e);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+margin-bottom: 10px;
+}
+
+.stat-box {
+background: rgba(255, 255, 255, 0.1);
+border-radius: 15px;
+padding: 18px;
+backdrop-filter: blur(10px);
+transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+transform: translateY(-2px);
+}
+
+.stat-label {
+font-size: 14px;
+color: #bdc3c7;
+margin-bottom: 8px;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+
+.stat-value {
+font-size: 36px;
+font-weight: bold;
+color: #ffd700;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.stat-value.score {
+font-size: 52px;
+background: linear-gradient(45deg, #ffd700, #ff6b6b);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
+
+.button {
+padding: 15px 30px;
+border: none;
+border-radius: 12px;
+font-size: 16px;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.3s ease;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+
+.button:hover {
+transform: translateY(-3px);
+box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.button:active {
+transform: translateY(0);
+}
+
+.button.primary {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+}
+
+.button.secondary {
+background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+color: white;
+}
+
+.button.shop {
+background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+color: white;
+}
+
+.button.toggle {
+background: #27ae60;
+color: white;
+}
+
+.button.toggle.off {
+background: #c0392b;
+}
+
+.controls {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-top: auto;
+}
+
+.game-over-overlay {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.85);
+display: none;
+align-items: center;
+justify-content: center;
+z-index: 10;
+animation: fadeIn 0.3s ease;
+}
+
+.game-over-content {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+padding: 50px;
+border-radius: 25px;
+text-align: center;
+box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+color: white;
+}
+
+.game-over-title {
+font-size: 56px;
+font-weight: bold;
+margin-bottom: 20px;
+}
+
+.game-over-score {
+font-size: 40px;
+margin-bottom: 15px;
+color: #ffd700;
+}
+
+.game-over-coins {
+font-size: 32px;
+margin-bottom: 30px;
+color: #f1c40f;
+}
+
+.instructions {
+background: rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+padding: 18px;
+font-size: 13px;
+line-height: 1.8;
+}
+
+.instructions h3 {
+color: #ffd700;
+margin-bottom: 12px;
+font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+.game-wrapper {
+padding: 10px;
+}
+
+.sidebar {
+width: 280px;
+padding: 20px;
+}
+
+.game-logo {
+font-size: 56px;
+}
+
+.how-to-play {
+padding: 25px 35px;
+}
+
+.items-grid {
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+}
+
+@media (max-width: 768px) {
+.game-wrapper {
+padding: 0;
+}
+
+.game-container {
+flex-direction: column;
+border-radius: 0;
+max-height: none;
+}
+
+.canvas-container {
+height: 55%;
+min-height: 350px;
+}
+
+.sidebar {
+width: 100%;
+height: 45%;
+padding: 15px;
+gap: 10px;
+}
+
+.game-title {
+font-size: 24px;
+}
+
+.stat-box {
+padding: 12px;
+}
+
+.stat-value {
+font-size: 28px;
+}
+
+.stat-value.score {
+font-size: 40px;
+}
+
+.game-logo {
+font-size: 42px;
+}
+
+.game-subtitle {
+font-size: 18px;
+}
+
+.how-to-play {
+padding: 20px;
+margin-bottom: 30px;
+}
+
+.how-to-play h2 {
+font-size: 22px;
+}
+
+.how-to-play-list {
+font-size: 15px;
+}
+
+.start-game-btn {
+padding: 15px 40px;
+font-size: 20px;
+}
+
+.instructions {
+font-size: 11px;
+padding: 12px;
+}
+
+.button {
+padding: 12px 20px;
+font-size: 14px;
+}
+
+.shop-container {
+padding: 20px;
+}
+
+.shop-title {
+font-size: 36px;
+}
+
+.section-title {
+font-size: 28px;
+}
+
+.items-grid {
+grid-template-columns: 1fr;
+gap: 15px;
+}
+
+.close-shop-btn {
+padding: 10px 20px;
+font-size: 14px;
+}
+}
+
+@media (max-width: 480px) {
+.canvas-container {
+height: 50%;
+min-height: 300px;
+}
+
+.sidebar {
+height: 50%;
+}
+
+.game-logo {
+font-size: 36px;
+}
+
+.how-to-play {
+padding: 15px;
+}
+
+.how-to-play h2 {
+font-size: 20px;
+}
+
+.how-to-play-list {
+font-size: 14px;
+}
+
+.start-game-btn {
+padding: 12px 30px;
+font-size: 18px;
+}
+}
+</style>
+<style>@view-transition { navigation: auto; }</style>
+<script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+<script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+</head>
+<body>
+<div class="game-wrapper">
+<div class="game-container"><!-- Shop Screen -->
+<div class="shop-screen" id="shopScreen"><button class="close-shop-btn" onclick="closeShop()">��� Tutup</button>
+<div class="shop-container">
+<div class="shop-header">
+<h1 class="shop-title">🏪 Toko Peralatan</h1>
+<div class="coins-display"><span class="coin-icon">🪙</span> <span id="shopCoinsDisplay">0</span> Koin
+</div>
+</div>
+<div class="shop-section">
+<h2 class="section-title">🏹 Busur</h2>
+<div class="items-grid" id="bowsGrid"></div>
+</div>
+<div class="shop-section">
+<h2 class="section-title">➳ Panah</h2>
+<div class="items-grid" id="arrowsGrid"></div>
+</div>
+</div>
+</div><!-- Game Area -->
+<div class="canvas-container">
+<canvas id="gameCanvas"></canvas>
+<div class="game-over-overlay" id="gameOverOverlay">
+<div class="game-over-content">
+<div class="game-over-title">
+🎯 Selesai!
+</div>
+<div class="game-over-score">
+Skor: <span id="finalScore">0</span>
+</div>
+<div class="game-over-coins">
+Koin Didapat: +<span id="coinsEarned">0</span> 🪙
+</div><button class="button primary" onclick="resetGame()" style="font-size: 20px; padding: 18px 40px;">Main Lagi</button>
+</div>
+</div>
+</div><!-- Sidebar -->
+<div class="sidebar">
+<h1 class="game-title" id="gameTitle">ArcheryPrism</h1>
+<div class="stat-box">
+<div class="stat-label">
+Skor
+</div>
+<div class="stat-value score" id="scoreDisplay">
+0
+</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">
+Koin
+</div>
+<div class="stat-value" id="coinsDisplay"><span class="coin-icon" style="width: 32px; height: 32px; font-size: 20px;">🪙</span> <span id="coinsValue">0</span>
+</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">
+Highscore
+</div>
+<div class="stat-value" id="highscoreDisplay">
+0
+</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">
+Waktu Tersisa
+</div>
+<div class="stat-value" id="timeDisplay">
+60
+</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">
+Panah Tersisa
+</div>
+<div class="stat-value" id="arrowsDisplay">
+30
+</div>
+</div>
+<div class="instructions">
+<h3>🎮 Kontrol</h3>
+<p>🖱️ Klik = Tembak</p>
+<p>��️ Space = Tembak</p>
+<p>⌨️ Enter = Pause</p>
+<p>⌨️ R = Reset</p>
+</div>
+<div class="controls"><button class="button shop" onclick="openShop()">🏪 Toko</button> <button class="button primary" id="pauseButton" onclick="togglePause()">Pause</button> <button class="button secondary" id="resetButton" onclick="resetGame()">Reset</button> <button class="button toggle" id="audioButton" onclick="toggleAudio()">Audio: ON</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+// Default config
+const defaultConfig = {
+game_title: "ArcheryPrism"
+};
+
+// Shop items data
+const bows = [
+{
+id: 'basic',
+name: 'Busur Kayu',
+description: 'Busur standar untuk pemula',
+price: 0,
+color: '#8b4513',
+auraColor: null,
+soundFreq: 800
+},
+{
+id: 'iron',
+name: 'Busur Besi',
+description: 'Lebih kuat dengan efek metalik',
+price: 50,
+color: '#708090',
+auraColor: 'rgba(112, 128, 144, 0.3)',
+soundFreq: 900
+},
+{
+id: 'golden',
+name: 'Busur Emas',
+description: 'Berkilau dengan aura keemasan',
+price: 100,
+color: '#ffd700',
+auraColor: 'rgba(255, 215, 0, 0.4)',
+soundFreq: 1000
+},
+{
+id: 'crystal',
+name: 'Busur Kristal',
+description: 'Tembus pandang dengan efek prisma',
+price: 150,
+color: '#87ceeb',
+auraColor: 'rgba(135, 206, 235, 0.5)',
+soundFreq: 1100
+},
+{
+id: 'shadow',
+name: 'Busur Bayangan',
+description: 'Hitam pekat dengan aura gelap',
+price: 200,
+color: '#1a1a1a',
+auraColor: 'rgba(138, 43, 226, 0.4)',
+soundFreq: 700
+},
+{
+id: 'phoenix',
+name: 'Busur Phoenix',
+description: 'Api legendaris yang berkobar!',
+price: 250,
+color: '#ff4500',
+auraColor: 'rgba(255, 69, 0, 0.6)',
+soundFreq: 1200
+}
+];
+
+const arrowItems = [
+{
+id: 'basic',
+name: 'Panah Kayu',
+description: 'Panah standar sederhana',
+price: 0,
+color: '#8b4513',
+headColor: '#95a5a6',
+trailColor: 'rgba(139, 69, 19, 0.3)',
+auraColor: null,
+soundFreq: 800
+},
+{
+id: 'steel',
+name: 'Panah Baja',
+description: 'Tajam dan berkilau',
+price: 50,
+color: '#708090',
+headColor: '#c0c0c0',
+trailColor: 'rgba(192, 192, 192, 0.4)',
+auraColor: 'rgba(192, 192, 192, 0.3)',
+soundFreq: 900
+},
+{
+id: 'golden',
+name: 'Panah Emas',
+description: 'Bercahaya keemasan',
+price: 100,
+color: '#ffd700',
+headColor: '#ffed4e',
+trailColor: 'rgba(255, 215, 0, 0.5)',
+auraColor: 'rgba(255, 215, 0, 0.4)',
+soundFreq: 1000
+},
+{
+id: 'ice',
+name: 'Panah Es',
+description: 'Dingin dengan efek es kristal',
+price: 150,
+color: '#00ffff',
+headColor: '#e0ffff',
+trailColor: 'rgba(0, 255, 255, 0.5)',
+auraColor: 'rgba(0, 255, 255, 0.4)',
+soundFreq: 1100
+},
+{
+id: 'fire',
+name: 'Panah Api',
+description: 'Terbakar dengan jejak api',
+price: 200,
+color: '#ff4500',
+headColor: '#ffa500',
+trailColor: 'rgba(255, 69, 0, 0.6)',
+auraColor: 'rgba(255, 69, 0, 0.5)',
+soundFreq: 1200
+},
+{
+id: 'thunder',
+name: 'Panah Petir',
+description: 'Listrik yang menyambar!',
+price: 250,
+color: '#9400d3',
+headColor: '#ff00ff',
+trailColor: 'rgba(148, 0, 211, 0.7)',
+auraColor: 'rgba(148, 0, 211, 0.6)',
+soundFreq: 1300
+}
+];
+
+// Player inventory
+let playerData = {
+coins: parseInt(localStorage.getItem('archeryPrismCoins')) || 0,
+ownedBows: JSON.parse(localStorage.getItem('archeryPrismOwnedBows')) || ['basic'],
+ownedArrows: JSON.parse(localStorage.getItem('archeryPrismOwnedArrows')) || ['basic'],
+equippedBow: localStorage.getItem('archeryPrismEquippedBow') || 'basic',
+equippedArrow: localStorage.getItem('archeryPrismEquippedArrow') || 'basic'
+};
+
+// Game state
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let gameRunning = false;
+let gamePaused = false;
+let score = 0;
+let coinsEarned = 0;
+let highscore = localStorage.getItem('archeryPrismHighscore') || 0;
+let timeLeft = 60;
+let arrowsLeft = 30;
+let targets = [];
+let gameArrows = [];
+let floatingTexts = [];
+let particles = [];
+let mouseX = 0;
+let mouseY = 0;
+let audioEnabled = true;
+let audioContext = null;
+let gameTimer = null;
+let spawnTimer = null;
+let animationId = null;
+
+// Resize canvas
+function resizeCanvas() {
+const container = canvas.parentElement;
+canvas.width = container.clientWidth;
+canvas.height = container.clientHeight;
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Initialize audio
+function initAudio() {
+if (!audioContext) {
+audioContext = new (window.AudioContext || window.webkitAudioContext)();
+}
+}
+
+// Play sound
+function playSound(frequency, duration) {
+if (!audioEnabled) return;
+
+try {
+initAudio();
+if (!audioContext) return;
+
+const oscillator = audioContext.createOscillator();
+const gainNode = audioContext.createGain();
+
+oscillator.connect(gainNode);
+gainNode.connect(audioContext.destination);
+
+oscillator.frequency.value = frequency;
+oscillator.type = 'sine';
+
+gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+oscillator.start(audioContext.currentTime);
+oscillator.stop(audioContext.currentTime + duration);
+} catch (e) {
+// Audio failed, continue without sound
+console.log('Audio playback failed');
+}
+}
+
+// Bow position
+let bowX = 80;
+let bowY = canvas.height / 2;
+
+// Particle class
+class Particle {
+constructor(x, y, color) {
+this.x = x;
+this.y = y;
+this.vx = (Math.random() - 0.5) * 4;
+this.vy = (Math.random() - 0.5) * 4;
+this.alpha = 1;
+this.color = color;
+this.size = 2 + Math.random() * 3;
+}
+
+update() {
+this.x += this.vx;
+this.y += this.vy;
+this.vy += 0.1; // Gravity effect
+this.alpha -= 0.015;
+this.size *= 0.97;
+}
+
+draw() {
+ctx.save();
+ctx.globalAlpha = this.alpha;
+ctx.fillStyle = this.color;
+ctx.beginPath();
+ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+ctx.fill();
+ctx.restore();
+}
+
+isFinished() {
+return this.alpha <= 0;
+}
+}
+
+// Target class
+class Target {
+constructor() {
+const sizeType = Math.random();
+if (sizeType < 0.3) {
+this.radius = 25 + Math.random() * 10;
+this.points = 5;
+this.sizeType = 'small';
+} else if (sizeType < 0.7) {
+this.radius = 35 + Math.random() * 15;
+this.points = 10;
+this.sizeType = 'medium';
+} else {
+this.radius = 50 + Math.random() * 20;
+this.points = 20;
+this.sizeType = 'large';
+}
+
+const side = Math.floor(Math.random() * 4);
+const speed = 1.5 + Math.random() * 1.5;
+
+switch(side) {
+case 0:
+this.x = 200 + Math.random() * (canvas.width - 400);
+this.y = -this.radius;
+this.vx = (Math.random() - 0.5) * 2;
+this.vy = speed;
+break;
+case 1:
+this.x = canvas.width + this.radius;
+this.y = 100 + Math.random() * (canvas.height - 200);
+this.vx = -speed;
+this.vy = (Math.random() - 0.5) * 2;
+break;
+case 2:
+this.x = 200 + Math.random() * (canvas.width - 400);
+this.y = canvas.height + this.radius;
+this.vx = (Math.random() - 0.5) * 2;
+this.vy = -speed;
+break;
+case 3:
+this.x = canvas.width + this.radius;
+this.y = 100 + Math.random() * (canvas.height - 200);
+this.vx = -speed;
+this.vy = (Math.random() - 0.5) * 2;
+break;
+}
+
+this.rotation = 0;
+this.rotationSpeed = (Math.random() - 0.5) * 0.05;
+}
+
+update() {
+this.x += this.vx;
+this.y += this.vy;
+this.rotation += this.rotationSpeed;
+}
+
+draw() {
+ctx.save();
+ctx.translate(this.x, this.y);
+ctx.rotate(this.rotation);
+
+ctx.fillStyle = '#2c3e50';
+ctx.beginPath();
+ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#ecf0f1';
+ctx.beginPath();
+ctx.arc(0, 0, this.radius * 0.85, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#34495e';
+ctx.beginPath();
+ctx.arc(0, 0, this.radius * 0.7, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#3498db';
+ctx.beginPath();
+ctx.arc(0, 0, this.radius * 0.55, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#e74c3c';
+ctx.beginPath();
+ctx.arc(0, 0, this.radius * 0.4, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.fillStyle = '#f1c40f';
+ctx.beginPath();
+ctx.arc(0, 0, this.radius * 0.2, 0, Math.PI * 2);
+ctx.fill();
+
+ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+ctx.stroke();
+
+ctx.restore();
+}
+
+isOffScreen() {
+return this.x < -this.radius * 2 ||
+this.x > canvas.width + this.radius * 2 ||
+this.y < -this.radius * 2 ||
+this.y > canvas.height + this.radius * 2;
+}
+}
+
+// Arrow class
+class Arrow {
+constructor(x, y, targetX, targetY) {
+this.x = x;
+this.y = y;
+const angle = Math.atan2(targetY - y, targetX - x);
+const speed = 10;
+this.vx = Math.cos(angle) * speed;
+this.vy = Math.sin(angle) * speed;
+this.angle = angle;
+this.active = true;
+this.trail = [];
+
+const arrowData = arrowItems.find(a => a.id === playerData.equippedArrow);
+this.color = arrowData.color;
+this.headColor = arrowData.headColor;
+this.trailColor = arrowData.trailColor;
+this.auraColor = arrowData.auraColor;
+}
+
+update() {
+this.trail.push({x: this.x, y: this.y});
+if (this.trail.length > 8) this.trail.shift();
+
+this.x += this.vx;
+this.y += this.vy;
+
+if (this.auraColor && Math.random() < 0.5) {
+particles.push(new Particle(this.x, this.y, this.auraColor));
+}
+
+if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+this.active = false;
+}
+}
+
+draw() {
+if (this.auraColor) {
+ctx.save();
+ctx.shadowBlur = 20;
+ctx.shadowColor = this.auraColor;
+ctx.fillStyle = this.auraColor;
+ctx.beginPath();
+ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
+ctx.fill();
+ctx.restore();
+}
+
+ctx.strokeStyle = this.trailColor;
+ctx.lineWidth = 3;
+ctx.beginPath();
+this.trail.forEach((point, i) => {
+if (i === 0) ctx.moveTo(point.x, point.y);
+else ctx.lineTo(point.x, point.y);
+});
+ctx.stroke();
+
+ctx.save();
+ctx.translate(this.x, this.y);
+ctx.rotate(this.angle);
+
+ctx.fillStyle = this.color;
+ctx.fillRect(-25, -2, 25, 4);
+
+ctx.fillStyle = '#e74c3c';
+ctx.beginPath();
+ctx.moveTo(-25, 0);
+ctx.lineTo(-30, -5);
+ctx.lineTo(-30, 5);
+ctx.closePath();
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(0, 0);
+ctx.lineTo(12, -6);
+ctx.lineTo(12, 6);
+ctx.closePath();
+ctx.fillStyle = this.headColor;
+ctx.fill();
+ctx.strokeStyle = '#7f8c8d';
+ctx.lineWidth = 1;
+ctx.stroke();
+
+ctx.restore();
+}
+}
+
+// Floating text class
+class FloatingText {
+constructor(x, y, text, color) {
+this.x = x;
+this.y = y;
+this.text = text;
+this.color = color;
+this.alpha = 1;
+this.vy = -2.5;
+this.scale = 1;
+}
+
+update() {
+this.y += this.vy;
+this.alpha -= 0.02;
+this.scale += 0.02;
+}
+
+draw() {
+ctx.save();
+ctx.globalAlpha = this.alpha;
+ctx.font = `bold ${24 * this.scale}px Arial`;
+ctx.fillStyle = this.color;
+ctx.strokeStyle = '#000';
+ctx.lineWidth = 3;
+ctx.textAlign = 'center';
+ctx.strokeText(this.text, this.x, this.y);
+ctx.fillText(this.text, this.x, this.y);
+ctx.restore();
+}
+
+isFinished() {
+return this.alpha <= 0;
+}
+}
+
+// Spawn target
+function spawnTarget() {
+if (gameRunning && !gamePaused && targets.length < 5) {
+targets.push(new Target());
+}
+}
+
+// Shoot arrow
+function shootArrow() {
+if (!gameRunning || gamePaused || arrowsLeft <= 0) return;
+
+initAudio();
+gameArrows.push(new Arrow(bowX, bowY, mouseX, mouseY));
+arrowsLeft--;
+updateDisplay();
+
+const arrowData = arrowItems.find(a => a.id === playerData.equippedArrow);
+playSound(arrowData.soundFreq, 0.1);
+
+if (arrowsLeft === 0) {
+endGame();
+}
+}
+
+// Check collisions
+function checkCollisions() {
+gameArrows.forEach(arrow => {
+if (!arrow.active) return;
+
+targets.forEach((target, index) => {
+const dx = arrow.x - target.x;
+const dy = arrow.y - target.y;
+const distance = Math.sqrt(dx * dx + dy * dy);
+
+if (distance < target.radius) {
+arrow.active = false;
+
+const points = target.points;
+score += points;
+coinsEarned++;
+
+for (let i = 0; i < 20; i++) {
+particles.push(new Particle(target.x, target.y, target.sizeType === 'small' ? '#3498db' : target.sizeType === 'medium' ? '#f1c40f' : '#e74c3c'));
+}
+
+const textColor = target.sizeType === 'small' ? '#3498db' : target.sizeType === 'medium' ? '#f1c40f' : '#e74c3c';
+floatingTexts.push(new FloatingText(target.x, target.y, `+${points} (+1🪙)`, textColor));
+targets.splice(index, 1);
+updateDisplay();
+
+const arrowData = arrowItems.find(a => a.id === playerData.equippedArrow);
+playSound(arrowData.soundFreq + 200, 0.2);
+}
+});
+});
+}
+
+// Draw bow
+function drawBow() {
+bowY = canvas.height / 2;
+const angle = Math.atan2(mouseY - bowY, mouseX - bowX);
+const bowData = bows.find(b => b.id === playerData.equippedBow);
+
+ctx.save();
+ctx.translate(bowX, bowY);
+ctx.rotate(angle);
+
+if (bowData.auraColor) {
+ctx.shadowBlur = 25;
+ctx.shadowColor = bowData.auraColor;
+ctx.fillStyle = bowData.auraColor;
+ctx.beginPath();
+ctx.arc(0, 0, 35, 0, Math.PI * 2);
+ctx.fill();
+}
+
+ctx.strokeStyle = bowData.color;
+ctx.lineWidth = 6;
+ctx.beginPath();
+ctx.arc(0, 0, 25, -Math.PI / 2, Math.PI / 2);
+ctx.stroke();
+
+ctx.strokeStyle = bowData.id === 'phoenix' ? '#ff6347' : '#654321';
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.moveTo(0, -25);
+ctx.lineTo(0, 25);
+ctx.stroke();
+
+ctx.fillStyle = bowData.color;
+ctx.fillRect(-5, -8, 10, 16);
+
+ctx.restore();
+}
+
+// Game loop
+function gameLoop() {
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+ctx.beginPath();
+ctx.arc(canvas.width * 0.3, 80, 40, 0, Math.PI * 2);
+ctx.arc(canvas.width * 0.7, 120, 50, 0, Math.PI * 2);
+ctx.fill();
+
+drawBow();
+
+if (!gamePaused) {
+particles.forEach((particle, index) => {
+particle.update();
+particle.draw();
+if (particle.isFinished()) {
+particles.splice(index, 1);
+}
+});
+
+targets.forEach((target, index) => {
+target.update();
+target.draw();
+if (target.isOffScreen()) {
+targets.splice(index, 1);
+}
+});
+
+gameArrows.forEach((arrow, index) => {
+if (arrow.active) {
+arrow.update();
+arrow.draw();
+} else {
+gameArrows.splice(index, 1);
+}
+});
+
+floatingTexts.forEach((text, index) => {
+text.update();
+text.draw();
+if (text.isFinished()) {
+floatingTexts.splice(index, 1);
+}
+});
+
+checkCollisions();
+} else {
+targets.forEach(target => target.draw());
+gameArrows.forEach(arrow => arrow.draw());
+
+ctx.save();
+ctx.font = 'bold 48px Arial';
+ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+ctx.textAlign = 'center';
+ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+ctx.restore();
+}
+
+if (gameRunning) {
+animationId = requestAnimationFrame(gameLoop);
+}
+}
+
+// Timer
+function startTimer() {
+if (gameTimer) clearInterval(gameTimer);
+gameTimer = setInterval(() => {
+if (gameRunning && !gamePaused) {
+timeLeft--;
+updateDisplay();
+
+if (timeLeft <= 0) {
+endGame();
+}
+}
+}, 1000);
+}
+
+// Update display
+function updateDisplay() {
+document.getElementById('scoreDisplay').textContent = score;
+document.getElementById('coinsValue').textContent = playerData.coins;
+document.getElementById('highscoreDisplay').textContent = highscore;
+document.getElementById('timeDisplay').textContent = timeLeft;
+document.getElementById('arrowsDisplay').textContent = arrowsLeft;
+}
+
+
+
+// Toggle pause
+function togglePause() {
+if (!gameRunning) return;
+
+gamePaused = !gamePaused;
+document.getElementById('pauseButton').textContent = gamePaused ? 'Resume' : 'Pause';
+}
+
+// Start game
+function startGame() {
+// Clear any existing timers
+if (gameTimer) clearInterval(gameTimer);
+if (spawnTimer) clearInterval(spawnTimer);
+if (animationId) cancelAnimationFrame(animationId);
+
+// Reset game state
+gameRunning = true;
+gamePaused = false;
+coinsEarned = 0;
+score = 0;
+timeLeft = 60;
+arrowsLeft = 30;
+targets = [];
+gameArrows = [];
+floatingTexts = [];
+particles = [];
+
+document.getElementById('pauseButton').textContent = 'Pause';
+document.getElementById('gameOverOverlay').style.display = 'none';
+
+updateDisplay();
+
+// Start game systems
+gameLoop();
+startTimer();
+spawnTimer = setInterval(spawnTarget, 1800);
+
+// Spawn initial targets
+setTimeout(() => spawnTarget(), 500);
+setTimeout(() => spawnTarget(), 1000);
+}
+
+// End game
+function endGame() {
+gameRunning = false;
+gamePaused = false;
+clearInterval(gameTimer);
+clearInterval(spawnTimer);
+cancelAnimationFrame(animationId);
+
+playerData.coins += coinsEarned;
+savePlayerData();
+
+if (score > highscore) {
+highscore = score;
+localStorage.setItem('archeryPrismHighscore', highscore);
+updateDisplay();
+}
+
+document.getElementById('finalScore').textContent = score;
+document.getElementById('coinsEarned').textContent = coinsEarned;
+document.getElementById('gameOverOverlay').style.display = 'flex';
+}
+
+// Reset game
+function resetGame() {
+// Stop everything first
+gameRunning = false;
+gamePaused = false;
+
+if (gameTimer) clearInterval(gameTimer);
+if (spawnTimer) clearInterval(spawnTimer);
+if (animationId) cancelAnimationFrame(animationId);
+
+// Hide game over screen
+document.getElementById('gameOverOverlay').style.display = 'none';
+
+// Start fresh game
+setTimeout(() => {
+startGame();
+}, 100);
+}
+
+// Toggle audio
+function toggleAudio() {
+audioEnabled = !audioEnabled;
+const button = document.getElementById('audioButton');
+button.textContent = audioEnabled ? 'Audio: ON' : 'Audio: OFF';
+button.classList.toggle('off');
+}
+
+// Save player data
+function savePlayerData() {
+localStorage.setItem('archeryPrismCoins', playerData.coins);
+localStorage.setItem('archeryPrismOwnedBows', JSON.stringify(playerData.ownedBows));
+localStorage.setItem('archeryPrismOwnedArrows', JSON.stringify(playerData.ownedArrows));
+localStorage.setItem('archeryPrismEquippedBow', playerData.equippedBow);
+localStorage.setItem('archeryPrismEquippedArrow', playerData.equippedArrow);
+}
+
+// Shop functions
+function openShop() {
+document.getElementById('shopScreen').classList.add('active');
+document.getElementById('shopCoinsDisplay').textContent = playerData.coins;
+renderShop();
+}
+
+function closeShop() {
+document.getElementById('shopScreen').classList.remove('active');
+}
+
+function renderShop() {
+const bowsGrid = document.getElementById('bowsGrid');
+const arrowsGrid = document.getElementById('arrowsGrid');
+
+bowsGrid.innerHTML = '';
+bows.forEach(bow => {
+const owned = playerData.ownedBows.includes(bow.id);
+const equipped = playerData.equippedBow === bow.id;
+
+const itemDiv = document.createElement('div');
+itemDiv.className = `shop-item ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+
+itemDiv.innerHTML = `
+<div class="item-preview" style="color: ${bow.color};">���</div>
+<div class="item-name">${bow.name}</div>
+<div class="item-description">${bow.description}</div>
+<div class="item-price">${bow.price === 0 ? 'GRATIS' : bow.price + ' 🪙'}</div>
+<button class="item-button ${equipped ? 'equipped' : owned ? 'equip' : 'buy'}"
+onclick="${equipped ? '' : owned ? `equipBow('${bow.id}')` : `buyBow('${bow.id}')`}">
+${equipped ? '✓ Dipasang' : owned ? 'Pasang' : 'Beli'}
+</button>
+`;
+
+bowsGrid.appendChild(itemDiv);
+});
+
+arrowsGrid.innerHTML = '';
+arrowItems.forEach(arrow => {
+const owned = playerData.ownedArrows.includes(arrow.id);
+const equipped = playerData.equippedArrow === arrow.id;
+
+const itemDiv = document.createElement('div');
+itemDiv.className = `shop-item ${owned ? 'owned' : ''} ${equipped ? 'equipped' : ''}`;
+
+itemDiv.innerHTML = `
+<div class="item-preview" style="color: ${arrow.color};">➳</div>
+<div class="item-name">${arrow.name}</div>
+<div class="item-description">${arrow.description}</div>
+<div class="item-price">${arrow.price === 0 ? 'GRATIS' : arrow.price + ' 🪙'}</div>
+<button class="item-button ${equipped ? 'equipped' : owned ? 'equip' : 'buy'}"
+onclick="${equipped ? '' : owned ? `equipArrow('${arrow.id}')` : `buyArrow('${arrow.id}')`}">
+${equipped ? '✓ Dipasang' : owned ? 'Pasang' : 'Beli'}
+</button>
+`;
+
+arrowsGrid.appendChild(itemDiv);
+});
+}
+
+function buyBow(id) {
+const bow = bows.find(b => b.id === id);
+if (!bow) return;
+
+if (playerData.coins >= bow.price) {
+playerData.coins -= bow.price;
+if (!playerData.ownedBows.includes(id)) {
+playerData.ownedBows.push(id);
+}
+playerData.equippedBow = id; // Auto equip after purchase
+savePlayerData();
+updateDisplay();
+renderShop();
+document.getElementById('shopCoinsDisplay').textContent = playerData.coins;
+playSound(1200, 0.2);
+} else {
+playSound(300, 0.3);
+// Inline message instead of alert
+const msg = document.createElement('div');
+msg.textContent = '❌ Koin tidak cukup! Butuh ' + bow.price + ' koin.';
+msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#e74c3c;color:white;padding:20px 40px;border-radius:15px;font-size:20px;font-weight:bold;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+document.body.appendChild(msg);
+setTimeout(() => msg.remove(), 2000);
+}
+}
+
+function equipBow(id) {
+if (!playerData.ownedBows.includes(id)) return;
+playerData.equippedBow = id;
+savePlayerData();
+renderShop();
+playSound(1000, 0.15);
+}
+
+function buyArrow(id) {
+const arrow = arrowItems.find(a => a.id === id);
+if (!arrow) return;
+
+if (playerData.coins >= arrow.price) {
+playerData.coins -= arrow.price;
+if (!playerData.ownedArrows.includes(id)) {
+playerData.ownedArrows.push(id);
+}
+playerData.equippedArrow = id; // Auto equip after purchase
+savePlayerData();
+updateDisplay();
+renderShop();
+document.getElementById('shopCoinsDisplay').textContent = playerData.coins;
+playSound(1200, 0.2);
+} else {
+playSound(300, 0.3);
+// Inline message instead of alert
+const msg = document.createElement('div');
+msg.textContent = '❌ Koin tidak cukup! Butuh ' + arrow.price + ' koin.';
+msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#e74c3c;color:white;padding:20px 40px;border-radius:15px;font-size:20px;font-weight:bold;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+document.body.appendChild(msg);
+setTimeout(() => msg.remove(), 2000);
+}
+}
+
+function equipArrow(id) {
+if (!playerData.ownedArrows.includes(id)) return;
+playerData.equippedArrow = id;
+savePlayerData();
+renderShop();
+playSound(1000, 0.15);
+}
+
+// Mouse events
+canvas.addEventListener('mousemove', (e) => {
+const rect = canvas.getBoundingClientRect();
+mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+});
+
+canvas.addEventListener('click', (e) => {
+e.preventDefault();
+shootArrow();
+});
+
+// Touch events
+canvas.addEventListener('touchmove', (e) => {
+e.preventDefault();
+const rect = canvas.getBoundingClientRect();
+const touch = e.touches[0];
+mouseX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+mouseY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+});
+
+canvas.addEventListener('touchstart', (e) => {
+e.preventDefault();
+const rect = canvas.getBoundingClientRect();
+const touch = e.touches[0];
+mouseX = (touch.clientX - rect.left) * (canvas.width / rect.width);
+mouseY = (touch.clientY - rect.top) * (canvas.height / rect.height);
+shootArrow();
+});
+
+// Keyboard events
+document.addEventListener('keydown', (e) => {
+if (e.code === 'Space') {
+e.preventDefault();
+shootArrow();
+} else if (e.code === 'Enter') {
+e.preventDefault();
+togglePause();
+} else if (e.code === 'KeyR') {
+e.preventDefault();
+resetGame();
+}
+});
+
+// Initialize
+function initializeGame() {
+updateDisplay();
+resizeCanvas();
+mouseX = canvas.width / 2;
+mouseY = canvas.height / 2;
+
+// Draw initial bow on welcome screen
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Draw sky background
+ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+ctx.beginPath();
+ctx.arc(canvas.width * 0.3, 80, 40, 0, Math.PI * 2);
+ctx.arc(canvas.width * 0.7, 120, 50, 0, Math.PI * 2);
+ctx.fill();
+
+drawBow();
+}
+
+// Run initialization immediately
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', () => {
+initializeGame();
+startGame();
+});
+} else {
+initializeGame();
+startGame();
+}
+
+// Element SDK implementation
+async function onConfigChange(config) {
+document.getElementById('gameTitle').textContent = config.game_title || defaultConfig.game_title;
+}
+
+function mapToCapabilities(config) {
+return {
+recolorables: [],
+borderables: [],
+fontEditable: undefined,
+fontSizeable: undefined
+};
+}
+
+function mapToEditPanelValues(config) {
+return new Map([
+['game_title', config.game_title || defaultConfig.game_title]
+]);
+}
+
+if (window.elementSdk) {
+window.elementSdk.init({
+defaultConfig,
+onConfigChange,
+mapToCapabilities,
+mapToEditPanelValues
+});
+}
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b05163dc1083ef7',t:'MTc2NjEyODI5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

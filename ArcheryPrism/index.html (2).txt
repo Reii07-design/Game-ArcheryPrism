@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archery Prism Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game-container">
+<canvas id="gameCanvas"></canvas>
+
+<div class="ui-panel">
+<div class="stats">Skor: <span id="scoreDisplay">0</span></div>
+<div class="stats">Koin: <span id="coinsValue">0</span> 🪙</div>
+<div class="stats">Sisa Waktu: <span id="timeDisplay">60</span>s</div>
+<div class="stats">Panah: <span id="arrowsDisplay">30</span></div>
+<div class="stats" style="font-size: 14px; margin-top: 5px;">Terbaik: <span id="highscoreDisplay">0</span></div>
+</div>
+
+<div class="controls">
+<button id="pauseButton" onclick="togglePause()">Pause</button>
+<button id="shopButton" onclick="openShop()">Shop 🛒</button>
+<button id="audioButton" onclick="toggleAudio()">Audio: ON</button>
+</div>
+
+<div id="gameOverOverlay">
+<h1 style="font-size: 48px; margin-bottom: 10px;">GAME OVER!</h1>
+<p style="font-size: 24px;">Skor Akhir: <span id="finalScore">0</span></p>
+<p style="font-size: 20px; color: #f1c40f;">Koin Didapat: +<span id="coinsEarned">0</span> 🪙</p>
+<button onclick="startGame()" style="background: #2ecc71; color: white; margin-top: 20px; padding: 15px 40px; font-size: 20px;">Main Lagi</button>
+</div>
+
+<div id="shopScreen">
+<div class="shop-header">
+<h1>Toko Alat Panahan</h1>
+<h3>Koin Anda: <span id="shopCoinsDisplay">0</span> 🪙</h3>
+<button onclick="closeShop()" style="background: #e74c3c; color: white;">Tutup</button>
+</div>
+<h2>Pilihan Busur</h2>
+<div class="shop-grid" id="bowsGrid"></div>
+<h2>Pilihan Panah</h2>
+<div class="shop-grid" id="arrowsGrid"></div>
+</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
